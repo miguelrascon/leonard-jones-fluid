@@ -1,0 +1,16 @@
+# Entornos virtuales (uv y pip)
+.venv/
+env/
+venv/
+
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Datos y resultados 
+*.csv
+*.dat
+*.txt
+*.png
+*.pdf
