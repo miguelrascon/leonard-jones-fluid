@@ -88,9 +88,9 @@ The number density is $\rho = N / L^2$.
 
 ## Results
 
-![Distribución de velocidades frente a Maxwell-Boltzmann](resultados_berendsen_MB.png)
+![Distribución de velocidades frente a Maxwell-Boltzmann](figures/resultados_berendsen_MB.png)
 
-![Campo de temperatura en estado estacionario](resultados_gradiente.png)
+![Campo de temperatura en estado estacionario](figures/resultados_gradiente.png)
 
 ## Getting started
 
