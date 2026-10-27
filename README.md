@@ -1,90 +1,117 @@
-# 2D Lennard-Jones Fluid Dynamics and Thermalization
+# 2D Lennard-Jones Fluid: Thermostats, Thermal Walls and Heat Conduction
 
-## Overview 
-This repository contains a Molecular Dynamics (MD) simulation of a 2D Lennard-Jones fluid consisting of $N$ particles within a square enclosure of area $L^2$. 
+Molecular Dynamics (MD) simulation of a two-dimensional Lennard-Jones fluid of $N$ particles in a square box of side $L$, written in Python.
 
-Instead of a standard constant-energy (NVE) simulation, this project explores different methods of temperature control and thermalization, forcing the average kinetic energy of the particles to a target temperature $k_B T$. The project analyzes both global thermostatting and local boundary thermalization, culminating in the study of non-equilibrium temperature gradients.
+Rather than a standard constant-energy (NVE) simulation, the project studies how temperature is imposed on the system. It compares a **global thermostat** with **stochastic thermal walls**, and then uses walls at different temperatures to drive the fluid into a **non-equilibrium steady state** with a temperature gradient.
 
-## Features & Project Phases
+## Highlights
 
-### 1. Global Temperature Control (Berendsen Thermostat)
-The baseline simulation utilizes a **Berendsen thermostat** to globally scale particle velocities and maintain a constant temperature.
-* Computes the steady-state dynamics of the fluid.
-* Analyzes the linear momentum distribution of a randomly selected particle to verify alignment with the theoretical **Maxwell-Boltzmann distribution**.
-* Evaluates the mean interaction energy (potential energy) per particle and its statistical dispersion.
+- Velocity Verlet integrator (symplectic, second order) with a truncated and shifted Lennard-Jones potential
+- Global temperature control with a Berendsen thermostat
+- Stochastic thermal walls that sample the Maxwell-Boltzmann flux distribution on every collision
+- Statistical validation of the steady state against the theoretical Maxwell-Boltzmann distribution
+- 2D heatmap of the local temperature field $T(x, y)$ under an imposed temperature difference
 
-### 2. Boundary Thermalization (Stochastic Thermal Walls)
-To create a more physically realistic model, the global thermostat is replaced with localized boundary thermalization.
-* Simulates a heat bath at temperature $T$ acting exclusively at the walls.
-* Replaces standard elastic wall collisions with a stochastic process: upon impact, a particle reflects with a new random velocity drawn from the Maxwell-Boltzmann distribution for temperature $T$.
-* Compares the thermodynamic results of this boundary-driven approach with the global Berendsen method.
+## Physical model
 
-### 3. Temperature Gradients (Non-Equilibrium Steady State)
-The final phase models heat conduction by establishing mixed boundary conditions.
-* Configures the left wall to temperature $T$ and the right wall to $T/2$.
-* Keeps the top and bottom walls diathermal (perfectly elastic bounces).
-* Calculates local temperatures by evaluating the kinetic energy density within small spatial grids of area $\Sigma$.
-* Generates a **2D Heatmap** to visualize and analyze the resulting steady-state temperature gradient across the enclosure.
+All quantities are in reduced units: $\sigma = \varepsilon = m = k_B = 1$.
 
----
-## Física implementada
+### Lennard-Jones potential
 
-Todo en **unidades
-reducidas**: σ = ε = m = kB = 1.
+$$
+V(r) = 4\varepsilon\left[\left(\frac{\sigma}{r}\right)^{12} - \left(\frac{\sigma}{r}\right)^{6}\right], \qquad r < r_{\text{cut}}
+$$
 
-### Potencial Lennard-Jones
+The potential is shifted so that $V(r_{\text{cut}}) = 0$, which avoids an energy discontinuity at the cutoff.
+
+### Velocity Verlet integrator
+
+$$
+\mathbf{r}(t+\Delta t) = \mathbf{r}(t) + \mathbf{v}(t)\,\Delta t + \tfrac{1}{2}\,\mathbf{a}(t)\,\Delta t^2
+$$
+
+$$
+\mathbf{v}(t+\Delta t) = \mathbf{v}(t) + \tfrac{1}{2}\left[\mathbf{a}(t) + \mathbf{a}(t+\Delta t)\right]\Delta t
+$$
+
+### Berendsen thermostat
+
+At each step, all velocities are rescaled by a common factor:
+
+$$
+\mathbf{v} \rightarrow \lambda\,\mathbf{v}, \qquad \lambda = \sqrt{1 + \frac{\Delta t}{\tau}\left(\frac{T_{\text{ref}}}{T_{\text{inst}}} - 1\right)}
+$$
+
+### Thermal walls
+
+When a particle hits a wall at temperature $T$, it is re-emitted with a new random velocity drawn from the Maxwell-Boltzmann **flux** distribution:
+
+- Tangential component: $v_t \sim \mathcal{N}(0, T)$
+- Normal component (pointing into the box): $v_n \sim \text{Rayleigh}(\sqrt{T})$, sampled as $v_n = \sqrt{-2T \ln U}$ with $U \sim \mathcal{U}(0, 1)$
+
+### Local temperature field
+
+The box is divided into cells of area $\delta\Sigma = (L/n_x)\,(L/n_y)$. The local temperature $T(x, y)$ is obtained by averaging the kinetic energy of the particles in each cell over the production snapshots.
+
+## Project phases
+
+### 1. Global temperature control (Berendsen thermostat)
+
+- Simulates the steady-state dynamics of the fluid at constant temperature.
+- Compares the momentum distribution of a randomly selected particle with the theoretical Maxwell-Boltzmann distribution.
+- Computes the mean potential energy per particle and its statistical dispersion.
+
+### 2. Boundary thermalization (stochastic thermal walls)
+
+- Replaces the global thermostat with a heat bath acting only at the walls, a more physically realistic model.
+- Replaces elastic wall collisions with the stochastic re-emission process described above.
+- Compares the resulting thermodynamic quantities with those of the Berendsen thermostat.
+
+### 3. Heat conduction (non-equilibrium steady state)
+
+- Sets the left wall at temperature $T$ and the right wall at $T/2$.
+- Keeps the top and bottom walls adiabatic (perfectly elastic collisions, no heat exchange).
+- Measures the local temperature field and visualizes the steady-state gradient as a 2D heatmap.
+
+## Default parameters
+
+| Parameter | Symbol | Value |
+|-----------|--------|-------|
+| Number of particles | $N$ | 100 |
+| Box side | $L$ | 10.0 |
+| Cutoff radius | $r_{\text{cut}}$ | 2.5 |
+| Time step | $\Delta t$ | 0.005 |
+| Target temperature | $T$ | 1.0 |
+| Berendsen coupling time | $\tau$ | 0.1 |
+
+The number density is $\rho = N / L^2$.
+
+## Results
+
+![Distribución de velocidades frente a Maxwell-Boltzmann](resultados_berendsen_MB.png)
+
+![Campo de temperatura en estado estacionario](resultados_gradiente.png)
+
+## Getting started
+
+### Requirements
+
+- Python 3.8+
+- NumPy
+- SciPy
+- Matplotlib
+
+### Installation and usage
+
+```bash
+git clone https://github.com/miguelrascon/leonard-jones-fluid.git
+cd leonard-jones-fluid
+pip install numpy scipy matplotlib
+python main.py
 ```
-V(r) = 4ε [(σ/r)^12 - (σ/r)^6]    desplazado en r_cut para continuidad
-```
 
-### Integrador: Velocity Verlet (simpléctico)
-```
-r(t+dt) = r(t) + v(t)·dt + ½a(t)·dt²
-v(t+dt) = v(t) + ½[a(t) + a(t+dt)]·dt
-```
+## Context
 
-### Termostato de Berendsen
-```
-v → λ·v,    λ = sqrt(1 + dt/τ · (T_ref/T_inst − 1))
-```
-
-### Paredes térmicas (distribución de flujo Maxwell-Boltzmann)
-Al chocar con una pared a temperatura T:
-- componente tangencial: v_t  ~ N(0, T)
-- componente normal (hacia el interior): v_n ~ Rayleigh(√T)
-  → muestreo: v_n = √(−2T·ln U),  U ~ Uniforme(0,1)
-
-### Campo de temperatura T(x,y)
-Se discretiza el recinto en celdas de área δΣ = (L/nx)·(L/ny) y se
-promedia la energía cinética local sobre los snapshots de producción.
-
-## Parámetros por defecto
-
-| Parámetro | Valor |
-|-----------|-------|
-| N         | 100   |
-| L         | 10.0  |
-| ρ         | 0.10  |
-| r_cut     | 2.5   |
-| dt        | 0.005 |
-| T_target  | 1.0   |
-| τ_Beren   | 0.1   |
-
-
--- 
-
-
-## Getting Started
-
-### Prerequisites
-*(List the libraries and tools required to run your code here. For example:)*
-* Python 3.8+
-* NumPy
-* Matplotlib (for visualization)
-* SciPy
-
-### Installation & Usage
-1. Clone the repository:
-   ```bash
-   git clone [https://github.com/yourusername/your-repo-name.git](https://github.com/yourusername/your-repo-name.git)
-
+Developed as a course project for the BSc in Physics at Universidad Autónoma de Madrid. 
+Statistical Mechanics
+2026 
