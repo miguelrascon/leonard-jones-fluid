@@ -29,7 +29,7 @@ def main():
     sim = Simulation(
         N    = cfg.N,
         L    = cfg.L,
-        T_init = cfg.T_TARGET,
+        T_init = 0.8,
         dt   = cfg.DT,
         r_cut = cfg.R_CUT,
         seed = cfg.SEED,

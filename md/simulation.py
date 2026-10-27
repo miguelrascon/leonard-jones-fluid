@@ -78,7 +78,7 @@ class Simulation:
         self.temperature_history = []
         self.energy_history      = []   # energía total E = KE + PE
         self.potential_history   = []
-        self.lambda_history      = []   # factor λ del termostato
+        self.lambda_history      = []   # factor lambda del termostato
         self.pos_history         = []
         self.vel_history         = []
 
